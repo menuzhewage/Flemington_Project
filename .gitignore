@@ -14,6 +14,7 @@ migrate_working_dir/
 
 firebase_options.dart
 *.json
+*.html
 
 # IntelliJ related
 *.iml
