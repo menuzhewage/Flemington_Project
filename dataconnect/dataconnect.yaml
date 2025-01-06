@@ -1,0 +1,12 @@
+specVersion: "v1beta"
+serviceId: "flemington_project"
+location: "us-central1"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "fdcdb"
+      cloudSql:
+        instanceId: "flemington_project-fdc"
+      # schemaValidation: "COMPATIBLE"
+connectorDirs: ["./connector"]
