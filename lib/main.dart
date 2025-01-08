@@ -1,7 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'auth/auth_gate.dart';
 import 'firebase_options.dart';
+import 'pages/account_officer.dart';
+import 'pages/md_officer.dart';
+import 'pages/perchase_officer.dart';
+import 'pages/site_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,10 +17,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var userRole = "Site";
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      home: const AuthGate(),
+      home: userRole == 'Site'
+    ? SitePage()
+    : userRole == 'PurchaseOfficer'
+        ? PurchaseOfficerPage()
+        : userRole == 'AccountsOfficer'
+            ? AccountsOfficerPage()
+            : userRole == 'MD'
+                ? MDPage()
+                : Placeholder(),
+
     );
   }
 }
