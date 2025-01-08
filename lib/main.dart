@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var userRole = "Site";
+    var userRole = "MD";
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
