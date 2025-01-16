@@ -107,48 +107,64 @@ class RequestProgressPage extends StatelessWidget {
 
   Widget _buildProgressBar(int currentStageIndex) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         for (int i = 0; i < stages.length; i++) ...[
+          // Circle and Label
           Column(
             children: [
+              // Progress Circle
               CircleAvatar(
-                radius: 20,
-                backgroundColor: i <= currentStageIndex
-                    ? Colors.blue
-                    : Colors.grey[300],
+                radius: 22, // Slightly larger for better visibility
+                backgroundColor:
+                    i <= currentStageIndex ? Colors.blue : Colors.grey[300],
                 child: Icon(
-                  i == 0
-                      ? Icons.create
-                      : i == 1
-                          ? Icons.pending
-                          : i == 2
-                              ? Icons.approval
-                              : Icons.done,
+                  _getStageIcon(i),
                   color: Colors.white,
+                  size: 24, // Larger icon for better visibility
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
+              // Stage Label
               Text(
                 stages[i],
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: i <= currentStageIndex ? Colors.blue : Colors.grey,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color:
+                      i <= currentStageIndex ? Colors.blue[900] : Colors.grey,
                 ),
               ),
             ],
           ),
+          // Connecting Line
           if (i < stages.length - 1)
             Expanded(
               child: Container(
                 height: 4,
-                color: i <= currentStageIndex ? Colors.blue : Colors.grey[300],
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                color: i < currentStageIndex ? Colors.blue : Colors.grey[300],
               ),
             ),
         ],
       ],
     );
+  }
+
+// Helper Function to Get Icon for Each Stage
+  IconData _getStageIcon(int index) {
+    switch (index) {
+      case 0:
+        return Icons.create; // Created
+      case 1:
+        return Icons.pending; // Pending
+      case 2:
+        return Icons.approval; // Approved
+      case 3:
+        return Icons.done; // Completed
+      default:
+        return Icons.help_outline; // Default icon
+    }
   }
 
   Widget _buildIconForRole(String role) {

@@ -4,37 +4,35 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class PurchaseOfficerPage extends StatelessWidget {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  PurchaseOfficerPage({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Purchase Officer Dashboard'),
-      ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _firestore
-            .collection('requests')
-            .where('assignedTo', isEqualTo: 'PurchaseOfficer')
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(child: Text("No requests assigned."));
-          }
-          return ListView(
-            children: snapshot.data!.docs.map((doc) {
-              var data = doc.data() as Map<String, dynamic>;
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                elevation: 2.0,
-                child: ListTile(
-                  title: Text(
-                    data['description'],
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text("Status: ${data['status']}"),
-                  trailing: Icon(Icons.arrow_forward_ios),
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Purchase Officer Dashboard'),
+        ),
+        body: StreamBuilder<QuerySnapshot>(
+          stream: _firestore
+              .collection('requests')
+              .where('assignedTo', isEqualTo: 'PurchaseOfficer')
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const Center(child: Text("No requests assigned."));
+            }
+            return ListView(
+              padding: const EdgeInsets.all(8.0),
+              children: snapshot.data!.docs.map((doc) {
+                var data = doc.data() as Map<String, dynamic>;
+                return RequestCard(
+                  description: data['description'],
+                  status: data['status'],
                   onTap: () {
                     Navigator.push(
                       context,
@@ -43,11 +41,41 @@ class PurchaseOfficerPage extends StatelessWidget {
                       ),
                     );
                   },
-                ),
-              );
-            }).toList(),
-          );
-        },
+                );
+              }).toList(),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class RequestCard extends StatelessWidget {
+  final String description;
+  final String status;
+  final VoidCallback onTap;
+
+  const RequestCard({
+    required this.description,
+    required this.status,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      elevation: 3.0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      child: ListTile(
+        title: Text(
+          description,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text("Status: $status"),
+        trailing: const Icon(Icons.arrow_forward_ios),
+        onTap: onTap,
       ),
     );
   }
@@ -63,16 +91,16 @@ class RequestDetailsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Request Details'),
+        title: const Text('Request Details'),
       ),
       body: FutureBuilder<DocumentSnapshot>(
         future: _firestore.collection('requests').doc(requestId).get(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || !snapshot.data!.exists) {
-            return Center(child: Text("Request not found."));
+            return const Center(child: Text("Request not found."));
           }
 
           var data = snapshot.data!.data() as Map<String, dynamic>;
@@ -85,29 +113,29 @@ class RequestDetailsPage extends StatelessWidget {
               children: [
                 Text(
                   "Description: ${data['description']}",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(
                   "Quantity: ${data['quantity']} ${data['unit']}",
-                  style: TextStyle(fontSize: 16),
+                  style: const TextStyle(fontSize: 16),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(
                   "Status: ${data['status']}",
-                  style: TextStyle(fontSize: 16),
+                  style: const TextStyle(fontSize: 16),
                 ),
-                SizedBox(height: 24),
-                Text(
+                const SizedBox(height: 24),
+                const Text(
                   "Progress Timeline",
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 Expanded(
                   child: progress != null && progress.isNotEmpty
                       ? ListView.separated(
                           itemCount: progress.length,
-                          separatorBuilder: (context, index) => Divider(),
+                          separatorBuilder: (context, index) => const Divider(),
                           itemBuilder: (context, index) {
                             var entry = progress[index];
                             var role = entry['role'];
@@ -119,20 +147,36 @@ class RequestDetailsPage extends StatelessWidget {
                             );
                           },
                         )
-                      : Center(child: Text("No progress available.")),
+                      : const Center(child: Text("No progress available.")),
                 ),
-                SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    _updateRequestStatus(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => _updateRequestStatus(context),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 20),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('Approve Request'),
                     ),
-                  ),
-                  child: Text('Approve Request'),
+                    ElevatedButton(
+                      onPressed: () => _showRejectDialog(context),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 20),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                      child: const Text('Reject Request'),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -140,6 +184,71 @@ class RequestDetailsPage extends StatelessWidget {
         },
       ),
     );
+  }
+
+  void _showRejectDialog(BuildContext context) {
+    final TextEditingController feedbackController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reject Request'),
+        content: TextField(
+          controller: feedbackController,
+          decoration: const InputDecoration(
+            labelText: 'Enter rejection feedback',
+            border: OutlineInputBorder(),
+          ),
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _rejectRequest(context, feedbackController.text.trim());
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Reject'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _rejectRequest(BuildContext context, String feedback) {
+    if (feedback.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Feedback cannot be empty.')),
+      );
+      return;
+    }
+
+    _firestore.collection('requests').doc(requestId).update({
+      'status': 'Rejected',
+      'assignedTo': 'None',
+      'feedback': feedback,
+      'progress': FieldValue.arrayUnion([
+        {
+          'timestamp': DateTime.now().toIso8601String(),
+          'role': 'PurchaseOfficer',
+          'action': 'Rejected Request',
+          'feedback': feedback,
+        },
+      ]),
+    }).then((_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Request rejected successfully.')),
+      );
+      Navigator.pop(context);
+    }).catchError((error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to reject request: $error')),
+      );
+    });
   }
 
   void _updateRequestStatus(BuildContext context) {
@@ -155,7 +264,7 @@ class RequestDetailsPage extends StatelessWidget {
       ]),
     }).then((_) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Request approved successfully.')),
+        const SnackBar(content: Text('Request approved successfully.')),
       );
       Navigator.pop(context);
     });

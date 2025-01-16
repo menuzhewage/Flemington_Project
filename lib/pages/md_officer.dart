@@ -25,7 +25,7 @@ class MDPage extends StatelessWidget {
 
           var requests = snapshot.data!.docs.where((doc) {
             var data = doc.data() as Map<String, dynamic>;
-            return data['status'] == 'Pending';
+            return data['status'] == 'Pending with MD';
           }).toList();
 
           var approvedRequests = snapshot.data!.docs.where((doc) {
