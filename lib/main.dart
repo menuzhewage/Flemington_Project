@@ -1,5 +1,4 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flemington_project/auth/login_page.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'pages/account_officer.dart';
@@ -23,15 +22,14 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       home: userRole == 'Site'
-     ? SitePage()
-     : userRole == 'PurchaseOfficer'
-         ? PurchaseOfficerPage()
-         : userRole == 'AccountsOfficer'
-             ? AccountsOfficerPage()
-             : userRole == 'MD'
-                 ? MDPage()
-                 : Placeholder(),
-
+          ? SitePage()
+          : userRole == 'PurchaseOfficer'
+              ? PurchaseOfficerPage()
+              : userRole == 'AccountsOfficer'
+                  ? AccountsOfficerPage()
+                  : userRole == 'MD'
+                      ? MDPage()
+                      : Placeholder(),
     );
   }
 }

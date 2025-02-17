@@ -6,7 +6,7 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 23, 23, 23),
+      backgroundColor: const Color.fromARGB(255, 227, 227, 227),
       body: Padding(
         padding: EdgeInsets.all(MediaQuery.sizeOf(context).width * 0.1),
         child: Container(
@@ -36,7 +36,7 @@ class LoginPage extends StatelessWidget {
                       color: const Color.fromARGB(255, 245, 196, 133),
                     ),
                     child: Image.asset(
-                      'assets/images/logo001.png',
+                      'assets/images/login.png',
                       fit: BoxFit.cover,
                       
                     ),

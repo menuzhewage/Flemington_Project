@@ -8,43 +8,81 @@ class PurchaseOfficerPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Purchase Officer Dashboard'),
+    return Scaffold(
+      backgroundColor: Colors.blueGrey[900],
+      appBar: AppBar(
+        elevation: 4,
+        backgroundColor: Colors.blueGrey[900],
+        title: const Text(
+          'Purchase Officer Dashboard',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
-        body: StreamBuilder<QuerySnapshot>(
-          stream: _firestore
-              .collection('requests')
-              .where('assignedTo', isEqualTo: 'PurchaseOfficer')
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-              return const Center(child: Text("No requests assigned."));
-            }
-            return ListView(
-              padding: const EdgeInsets.all(8.0),
-              children: snapshot.data!.docs.map((doc) {
-                var data = doc.data() as Map<String, dynamic>;
-                return RequestCard(
-                  description: data['description'],
-                  status: data['status'],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => RequestDetailsPage(requestId: doc.id),
+      ),
+      body: Container(
+        color: Colors.blueGrey[800],
+        child: Padding(
+          padding: const EdgeInsets.all(30.0),
+          child: Row(
+            children: [
+              Container(
+                width: MediaQuery.sizeOf(context).width * 0.17,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.blueGrey,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: StreamBuilder<QuerySnapshot>(
+                        stream: _firestore
+                            .collection('requests')
+                            .where('assignedTo', isEqualTo: 'PurchaseOfficer')
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          }
+                          if (!snapshot.hasData ||
+                              snapshot.data!.docs.isEmpty) {
+                            return const Center(
+                                child: Text("No requests assigned."));
+                          }
+                          return ListView(
+                            padding: const EdgeInsets.all(8.0),
+                            children: snapshot.data!.docs.map((doc) {
+                              var data = doc.data() as Map<String, dynamic>;
+                              return RequestCard(
+                                description: data['description'],
+                                status: data['status'],
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          RequestDetailsPage(requestId: doc.id),
+                                    ),
+                                  );
+                                },
+                              );
+                            }).toList(),
+                          );
+                        },
                       ),
-                    );
-                  },
-                );
-              }).toList(),
-            );
-          },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -65,15 +103,24 @@ class RequestCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Colors.blueGrey[700],
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       elevation: 3.0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
       child: ListTile(
         title: Text(
           description,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
-        subtitle: Text("Status: $status"),
+        subtitle: Text(
+          "Status: $status",
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
         trailing: const Icon(Icons.arrow_forward_ios),
         onTap: onTap,
       ),
@@ -89,99 +136,115 @@ class RequestDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Request Details'),
-      ),
-      body: FutureBuilder<DocumentSnapshot>(
-        future: _firestore.collection('requests').doc(requestId).get(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(child: Text("Request not found."));
-          }
-
-          var data = snapshot.data!.data() as Map<String, dynamic>;
-          var progress = data['progress'] as List<dynamic>?;
-
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Description: ${data['description']}",
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Quantity: ${data['quantity']} ${data['unit']}",
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Status: ${data['status']}",
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  "Progress Timeline",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: progress != null && progress.isNotEmpty
-                      ? ListView.separated(
-                          itemCount: progress.length,
-                          separatorBuilder: (context, index) => const Divider(),
-                          itemBuilder: (context, index) {
-                            var entry = progress[index];
-                            var role = entry['role'];
-                            var action = entry['action'];
-                            var timestamp = entry['timestamp'];
-                            return ListTile(
-                              title: Text(action),
-                              subtitle: Text("$role - $timestamp"),
-                            );
-                          },
-                        )
-                      : const Center(child: Text("No progress available.")),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Container(
+      color: Colors.blueGrey[900],
+      child: Scaffold(
+        backgroundColor: Colors.blueGrey[900],
+        appBar: AppBar(
+          title: const Text(
+            'Request Details',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: Colors.blueGrey[800],
+        ),
+        body: FutureBuilder<DocumentSnapshot>(
+          future: _firestore.collection('requests').doc(requestId).get(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (!snapshot.hasData || !snapshot.data!.exists) {
+              return const Center(child: Text("Request not found."));
+            }
+      
+            var data = snapshot.data!.data() as Map<String, dynamic>;
+            var progress = data['progress'] as List<dynamic>?;
+      
+            return Container(
+              color: Colors.blueGrey[700],
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ElevatedButton(
-                      onPressed: () => _updateRequestStatus(context),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 12, horizontal: 20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text('Approve Request'),
+                    Text(
+                      "Description: ${data['description']}",
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white,),
                     ),
-                    ElevatedButton(
-                      onPressed: () => _showRejectDialog(context),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 12, horizontal: 20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Quantity: ${data['quantity']} ${data['unit']}",
+                      style: const TextStyle(fontSize: 16, color: Colors.white,),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Status: ${data['status']}",
+                      style: const TextStyle(fontSize: 16, color: Colors.white,),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      "Progress Timeline",
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white,),
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: progress != null && progress.isNotEmpty
+                          ? ListView.separated(
+                              itemCount: progress.length,
+                              separatorBuilder: (context, index) => const Divider(),
+                              itemBuilder: (context, index) {
+                                var entry = progress[index];
+                                var role = entry['role'];
+                                var action = entry['action'];
+                                var timestamp = entry['timestamp'];
+                                return ListTile(
+                                  title: Text(action),
+                                  subtitle: Text("$role - $timestamp"),
+                                );
+                              },
+                            )
+                          : const Center(child: Text("No progress available.")),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () => _updateRequestStatus(context),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 12, horizontal: 20),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text('Approve Request'),
                         ),
-                        backgroundColor: Colors.red,
-                      ),
-                      child: const Text('Reject Request'),
+                        ElevatedButton(
+                          onPressed: () => _showRejectDialog(context),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 12, horizontal: 20),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                          child: const Text('Reject Request'),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          );
-        },
+              ),
+            );
+          },
+        ),
       ),
     );
   }

@@ -12,94 +12,103 @@ class SitePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black,
         title: const Text(
           'Site Dashboard',
           style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
+            fontSize: 22,
             fontWeight: FontWeight.bold,
-            letterSpacing: 2.0,
+            color: Colors.white,
           ),
         ),
+        backgroundColor: Colors.blueGrey[900],
+        elevation: 4,
       ),
       body: Container(
-        decoration: BoxDecoration(color: Colors.black),
+        color: Colors.blueGrey[800],
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Card(
-            elevation: 8,
-            color: const Color.fromARGB(255, 24, 24, 24),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: StreamBuilder<QuerySnapshot>(
-                      stream: _firestore.collection('requests').snapshots(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        }
-                        if (snapshot.hasError) {
-                          return const Center(
-                              child:
-                                  Text("An error occurred. Please try again."));
-                        }
-                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                          return const Center(
-                              child: Text("No requests found."));
-                        }
+          padding: const EdgeInsets.all(30.0),
+          child: Row(
+            children: [
+              Container(
+                width: MediaQuery.sizeOf(context).width * 0.17,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.blueGrey,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: StreamBuilder<QuerySnapshot>(
+                        stream: _firestore.collection('requests').snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          }
+                          if (snapshot.hasError) {
+                            return const Center(
+                                child: Text('Error loading data'));
+                          }
+                          if (!snapshot.hasData ||
+                              snapshot.data!.docs.isEmpty) {
+                            return const Center(
+                                child: Text('No requests available'));
+                          }
 
-                        final requests = snapshot.data!.docs.map((doc) {
-                          var data = doc.data() as Map<String, dynamic>;
-                          data['id'] = doc.id;
-                          return data;
-                        }).toList();
+                          final requests = snapshot.data!.docs.map((doc) {
+                            var data = doc.data() as Map<String, dynamic>;
+                            data['id'] = doc.id;
+                            return data;
+                          }).toList();
 
-                        final approvedRequests = requests
-                            .where((req) => req['status'] == 'Approved')
-                            .toList();
-                        final pendingRequests = requests
-                            .where((req) =>
-                                req['status'].toString().contains('Pending'))
-                            .toList();
-                        final rejectedRequests = requests
-                            .where((req) => req['status'] == 'Rejected')
-                            .toList();
+                          final approvedRequests = requests
+                              .where((r) => r['status'] == 'Approved')
+                              .toList();
+                          final pendingRequests = requests
+                              .where((r) =>
+                                  r['status'].toString().contains('Pending'))
+                              .toList();
+                          final rejectedRequests = requests
+                              .where((r) => r['status'] == 'Rejected')
+                              .toList();
 
-                        return ListView(
-                          children: [
-                            _buildSection(
-                                'Approved Requests', approvedRequests, context),
-                            _buildSection(
-                                'Pending Requests', pendingRequests, context),
-                            _buildSection(
-                                'Rejected Requests', rejectedRequests, context),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 12, horizontal: 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                          return ListView(
+                            children: [
+                              _buildSection(context, 'Approved Requests',
+                                  approvedRequests),
+                              _buildSection(
+                                  context, 'Pending Requests', pendingRequests),
+                              _buildSection(context, 'Rejected Requests',
+                                  rejectedRequests),
+                            ],
+                          );
+                        },
                       ),
                     ),
-                    onPressed: () {
-                      _showCreateRequestDialog(context);
-                    },
-                    child: const Text('Create New Request'),
-                  ),
-                ],
+                    Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueGrey,
+                          minimumSize: const Size(double.infinity, 50),
+                        ),
+                        onPressed: () => _showCreateRequestDialog(context),
+                        child: const Text(
+                          'Create New Request',
+                          style: TextStyle(
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -107,204 +116,85 @@ class SitePage extends StatelessWidget {
   }
 
   Widget _buildSection(
-      String title, List<Map<String, dynamic>> requests, BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
+      BuildContext context, String title, List<Map<String, dynamic>> requests) {
+    return Card(
+      color: Colors.blueGrey[700],
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      child: ExpansionTile(
+        title: Text(
+          title,
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        ...requests.map((request) {
-          return Card(
-            color: const Color.fromARGB(255, 44, 44, 44),
-            margin: const EdgeInsets.symmetric(vertical: 8.0),
-            elevation: 2.0,
-            child: ListTile(
-              title: Text(
-                request['description'],
-                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white70),
-              ),
-              subtitle: Text("Status: ${request['status']}", style: TextStyle(
-                color: Colors.white,
-              ),),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _showDeleteDialog(context, request['id']),
-                  ),
-                  const Icon(Icons.arrow_forward_ios),
-                ],
-              ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        RequestProgressPage(requestId: request['id']),
-                  ),
-                );
-              },
+        children: requests.map((request) {
+          return ListTile(
+            title: Text(request['description'],
+                style: const TextStyle(color: Colors.white)),
+            subtitle: Text('Status: ${request['status']}',
+                style: const TextStyle(color: Colors.white70)),
+            trailing:
+                const Icon(Icons.arrow_forward_ios, color: Colors.white70),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                      RequestProgressPage(requestId: request['id'])),
             ),
           );
         }).toList(),
-      ],
-    );
-  }
-
-  void _showDeleteDialog(BuildContext context, String requestId) {
-    final TextEditingController feedbackController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Request'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Please provide feedback before deleting this request.'),
-            const SizedBox(height: 12),
-            TextField(
-              controller: feedbackController,
-              decoration: const InputDecoration(
-                hintText: 'Enter feedback',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final feedback = feedbackController.text.trim();
-              if (feedback.isNotEmpty) {
-                _firestore
-                    .collection('requests')
-                    .doc(requestId)
-                    .delete()
-                    .then((_) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Request deleted successfully.')),
-                  );
-                  Navigator.pop(context);
-                }).catchError((error) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to delete request: $error')),
-                  );
-                });
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content:
-                          Text('Feedback is required to delete a request.')),
-                );
-              }
-            },
-            child: const Text('Delete'),
-          ),
-        ],
       ),
     );
   }
 
   void _showCreateRequestDialog(BuildContext context) {
-    final TextEditingController descriptionController = TextEditingController();
-    final TextEditingController quantityController = TextEditingController();
-    final TextEditingController unitController = TextEditingController();
-    final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+    final descriptionController = TextEditingController();
+    final quantityController = TextEditingController();
+    final unitController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Create Request'),
         content: Form(
-          key: _formKey,
+          key: formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
                 controller: descriptionController,
-                decoration: const InputDecoration(
-                  hintText: 'Enter request description',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => value == null || value.trim().isEmpty
-                    ? 'Please enter a description'
-                    : null,
+                decoration: const InputDecoration(labelText: 'Description'),
+                validator: (value) =>
+                    value!.isEmpty ? 'Enter description' : null,
               ),
-              const SizedBox(height: 12),
               TextFormField(
                 controller: quantityController,
+                decoration: const InputDecoration(labelText: 'Quantity'),
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  hintText: 'Enter quantity',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty)
-                    return 'Please enter quantity';
-                  if (int.tryParse(value) == null)
-                    return 'Please enter a valid number';
-                  return null;
-                },
+                validator: (value) => value!.isEmpty ? 'Enter quantity' : null,
               ),
-              const SizedBox(height: 12),
               TextFormField(
                 controller: unitController,
-                decoration: const InputDecoration(
-                  hintText: 'Enter unit (e.g., bags, pieces)',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => value == null || value.trim().isEmpty
-                    ? 'Please enter a unit'
-                    : null,
+                decoration: const InputDecoration(labelText: 'Unit'),
+                validator: (value) => value!.isEmpty ? 'Enter unit' : null,
               ),
             ],
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                final description = descriptionController.text.trim();
-                final quantity = int.parse(quantityController.text.trim());
-                final unit = unitController.text.trim();
-
+              if (formKey.currentState!.validate()) {
                 _firestore.collection('requests').add({
-                  'description': description,
-                  'quantity': quantity,
-                  'unit': unit,
+                  'description': descriptionController.text,
+                  'quantity': int.parse(quantityController.text),
+                  'unit': unitController.text,
                   'status': 'Pending with Purchase Officer',
-                  'createdBy': 'Site',
-                  'assignedTo': 'PurchaseOfficer',
-                  'progress': [
-                    {
-                      'timestamp': DateTime.now().toIso8601String(),
-                      'role': 'Site',
-                      'action': 'Created Request',
-                    },
-                  ],
                   'createdAt': DateTime.now().toIso8601String(),
                 });
-
                 Navigator.pop(context);
               }
             },
